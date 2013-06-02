@@ -1,9 +1,8 @@
-mvbacore-thirdparty ReadMe
+MvbaCoreThirdParty ReadMe
 ===
+### Description
 
-## DESCRIPTION
-
-mvbacore-thirdparty is a collection of common classes that we use in our projects at MVBA. The classes used to be a part of MvbaCore, but we moved them so that MvbaCore would not have any third party dependencies. This library depends on NewtonSoft.Json and Lucene.Net
+MvbaCore.ThirdParty is a collection of common classes that we use in our projects at MVBA. The classes used to be a part of MvbaCore, but we moved them so that MvbaCore would not have any third party dependencies. This library depends on NewtonSoft.Json and Lucene.Net
 
 It has the following features:
 
@@ -11,7 +10,7 @@ It has the following features:
 * Utility classes to support interacting with Lucene.Net.
 
 
-## HOW TO BUILD
+### How To Build:
 
 The build script requires Ruby with rake installed.
 
@@ -21,13 +20,13 @@ The build script requires Ruby with rake installed.
 If you do not have ruby:
 
 1. You need to create a src\CommonAssemblyInfo.cs file. Go.bat will copy src\CommonAssemblyInfo.cs.default to src\CommonAssemblyInfo.cs
-1. open src\MvbaCore.ThirdParty.sln with Visual Studio and Build the solution
+1. open src\MvbaCore.ThirdParty.sln with Visual Studio and build the solution
 
-## License		
+### License
 
 [MIT License][mitlicense]
 
-This project is part of [MVBA Law Commons][mvbalawcommons].
+This project is part of [MVBA's Open Source Projects][MvbaLawGithub].
 
-[mvbalawcommons]: http://code.google.com/p/mvbalaw-commons/
+[MvbaLawGithub]: http://mvbalaw.github.io/
 [mitlicense]: http://www.opensource.org/licenses/mit-license.php
