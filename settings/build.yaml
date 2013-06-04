@@ -1,2 +1,2 @@
-:artifacts: '//archive1/term/SERVER/BuildAgents/mvbacore-thirdparty/master'
-:stage: 'c:/projects/mvbacore-thirdparty/build'
+:artifacts: '//archive1/term/SERVER/BuildAgents/MvbaCore.ThirdParty/master'
+:stage: 'c:/projects/MvbaCore.ThirdParty/build'
