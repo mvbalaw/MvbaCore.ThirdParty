@@ -11,6 +11,8 @@
 using System;
 using System.Linq;
 
+using JetBrains.Annotations;
+
 namespace MvbaCore.ThirdParty.Lucene
 {
 	public interface ILuceneIndexer
@@ -21,6 +23,7 @@ namespace MvbaCore.ThirdParty.Lucene
 		void UpdateIndex<T>(T entity);
 	}
 
+	[UsedImplicitly]
 	public class LuceneIndexer : ILuceneIndexer, IDisposable
 	{
 		private readonly IEntityIndexUpdater[] _indexUpdaters;
