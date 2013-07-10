@@ -379,7 +379,6 @@ namespace MvbaCore.ThirdParty.Messaging
 						_fileSystemService.FileExists(Path.Combine(_messageDir, Path.GetFileNameWithoutExtension(headerFile) + Constants.MessageDataFileExtension)))
 					{
 						_fileSystemService.DeleteFile(headerFile + ErrorReasonFileExtension);
-						continue;
 					}
 					if (_fileSystemService.FileExists(Path.Combine(_messageDir, Path.GetFileNameWithoutExtension(headerFile) + Constants.MessageDataFileExtension)))
 					{
