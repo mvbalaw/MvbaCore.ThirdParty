@@ -95,7 +95,7 @@ namespace MvbaCore.ThirdParty.Lucene
 					var value = LuceneSearcher.ReplaceDashesWithSpecialString(field.StringValue, false);
 					if (field.IsTokenized)
 					{
-						value = value + (" " + value).Replace(" ", " " + LuceneConstants.WildcardEndsWithSearchEnabler); 
+						value = value + (" " + value).Replace(" ", " " + LuceneConstants.WildcardEndsWithSearchEnabler);
 					}
 					field.SetValue(value);
 				}
@@ -111,9 +111,9 @@ namespace MvbaCore.ThirdParty.Lucene
 				return;
 			}
 			var analyzer = new StandardAnalyzer(Version.LUCENE_30);
-			string luceneDirectory = _luceneFileSystem.GetLuceneDirectory();
+			var luceneDirectory = _luceneFileSystem.GetLuceneDirectory();
 			var fsDirectory = FSDirectory.Open(new DirectoryInfo(luceneDirectory));
-			bool create = !Directory.GetFiles(luceneDirectory).Any();
+			var create = !Directory.GetFiles(luceneDirectory).Any();
 			_writer = new IndexWriter(fsDirectory, analyzer, create, new IndexWriter.MaxFieldLength(1000));
 		}
 	}

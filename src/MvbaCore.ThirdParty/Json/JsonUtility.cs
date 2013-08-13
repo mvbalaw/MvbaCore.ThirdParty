@@ -54,7 +54,7 @@ namespace MvbaCore.ThirdParty.Json
 
 		private static JsonSerializerSettings GetJsonSerializerSettings()
 		{
-			var contractResolver = new ThirdParty.Json.HandlePrivateSettersDefaultContractResolver();
+			var contractResolver = new HandlePrivateSettersDefaultContractResolver();
 			var settings = new JsonSerializerSettings
 			{
 				ContractResolver = contractResolver

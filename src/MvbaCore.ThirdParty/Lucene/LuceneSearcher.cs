@@ -31,11 +31,11 @@ namespace MvbaCore.ThirdParty.Lucene
 	{
 		[DefaultKey]
 		public static readonly QueryType Intersection = new QueryType("intersection", "Intersection",
-		                                                              (searcher, queryString) =>
-		                                                              searcher.FindIntersection(queryString));
+			(searcher, queryString) =>
+				searcher.FindIntersection(queryString));
 
 		public static readonly QueryType Union = new QueryType("union", "Union",
-		                                                       (searcher, queryString) => searcher.FindUnion(queryString));
+			(searcher, queryString) => searcher.FindUnion(queryString));
 
 		private QueryType(string key, string description, Func<LuceneSearcher, string, IList<LuceneSearchResult>> findMatches)
 		{
@@ -74,120 +74,6 @@ namespace MvbaCore.ThirdParty.Lucene
 			return QueryType.GetFor(queryType).OrDefault().FindMatches(this, querystring);
 		}
 
-		private IList<LuceneSearchResult> FindClauseMatches(Query fullQuery, Searcher indexSearcher)
-		{
-			try
-			{
-				var collector = TopScoreDocCollector.Create(MaxHits, false);
-				indexSearcher.Search(fullQuery, collector);
-				var hits = collector.TopDocs();
-				if (hits.TotalHits == 0)
-				{
-					return new List<LuceneSearchResult>();
-				}
-
-				var count = Math.Min(hits.TotalHits, MaxHits);
-				var mergedResults = Enumerable.Range(0, count)
-					.Select(x => indexSearcher.Doc(hits.ScoreDocs[x].Doc))
-					.GroupBy(x =>
-						{
-							var field = _fields
-								.Where(y => y.IsUniqueKey)
-								.Select(y => x.GetField(y.Name))
-								.FirstOrDefault(y => y != null);
-							return field == null ? "" : field.StringValue;
-						})
-					.Where(x => x.Key != "")
-					.OrderByDescending(x => x.Count())
-					.Select(x => new LuceneSearchResult(x.Key, x));
-
-				var result = mergedResults
-					.Take(MaxResults)
-					.ToList();
-				return result;
-			}
-			catch (ParseException)
-			{
-				return new List<LuceneSearchResult>();
-			}
-		}
-
-		public IList<LuceneSearchResult> FindIntersection(string querystring)
-		{
-			var analyzer = new StandardAnalyzer(Version.LUCENE_30);
-			var fieldNames = _fields
-				.Where(x => x.IsSearchable)
-				.Where(x => !x.IsSystemDescriminator)
-				.Select(x => x.Name)
-				.ToArray();
-			var systemDescriminator = _fields.FirstOrDefault(x => x.IsSystemDescriminator);
-			var parser = new MultiFieldQueryParser(Version.LUCENE_30,
-			                                       fieldNames,
-			                                       analyzer);
-			var lowerQueryString = querystring.ToLower();
-
-			parser.DefaultOperator = QueryParser.Operator.AND;
-			try
-			{
-				var escaped = ReplaceDashesWithSpecialString(lowerQueryString, true);
-				escaped = EscapeLeadingWildcards(escaped);
-				var fullQuery = parser.Parse(escaped);
-				var rewrittenQueryString = fullQuery.ToString();
-				var clauses = rewrittenQueryString.Split(new[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
-
-				var luceneDirectory = _luceneFileSystem.GetLuceneDirectory();
-
-				var fsDirectory = FSDirectory.Open(new DirectoryInfo(luceneDirectory));
-				var indexSearcher = new IndexSearcher(fsDirectory, true);
-
-				var descriminatorClause = "";
-				if (systemDescriminator != null)
-				{
-					descriminatorClause = clauses.FirstOrDefault(y => y.StartsWith(systemDescriminator.Name + ":")) ?? "";
-				}
-
-				if (clauses.Length <= 1 || descriminatorClause.Length > 0 && clauses.Length == 2)
-				{
-					return FindClauseMatches(fullQuery, indexSearcher);
-				}
-
-				// force it to be an 'and' search by keeping only those uniqueIDs
-				// that show up in the search result for each independent clause
-				parser.DefaultOperator = QueryParser.Operator.OR;
-
-				var searchResultList = new List<LuceneSearchResult>();
-				foreach (var queryPart in clauses.Except(new[] { descriminatorClause }))
-				{
-					var query = descriminatorClause.Length > 0
-						            ? parser.Parse("+" + queryPart + " +" + descriminatorClause)
-						            : parser.Parse(queryPart);
-					var partialResult = FindClauseMatches(query, indexSearcher);
-					if (!partialResult.Any())
-					{
-						// nothing matched this clause. since we are aggregating an AND
-						// result across multiple documents, we're done.
-						return partialResult;
-					}
-					searchResultList.AddRange(partialResult);
-				}
-				var expectedMatchingClauses = clauses.Length;
-				if (descriminatorClause.Length > 0)
-				{
-					expectedMatchingClauses--;
-				}
-				var mergedResult = searchResultList
-					.GroupBy(x => x.UniqueId)
-					.Where(x => x.Count() == expectedMatchingClauses)
-					.Select(x => x.First())
-					.ToList();
-				return mergedResult;
-			}
-			catch (ParseException)
-			{
-				return new List<LuceneSearchResult>();
-			}
-		}
-
 		public static string EscapeLeadingWildcards(string input)
 		{
 			if (input.Length == 0)
@@ -201,8 +87,8 @@ namespace MvbaCore.ThirdParty.Lucene
 			{
 				return input;
 			}
-			bool gatheringTerm = false;
-			foreach(var part in parts)
+			var gatheringTerm = false;
+			foreach (var part in parts)
 			{
 				escaped.Append(' ');
 				if (gatheringTerm)
@@ -248,6 +134,120 @@ namespace MvbaCore.ThirdParty.Lucene
 			return escaped.ToString().TrimStart();
 		}
 
+		private IList<LuceneSearchResult> FindClauseMatches(Query fullQuery, Searcher indexSearcher)
+		{
+			try
+			{
+				var collector = TopScoreDocCollector.Create(MaxHits, false);
+				indexSearcher.Search(fullQuery, collector);
+				var hits = collector.TopDocs();
+				if (hits.TotalHits == 0)
+				{
+					return new List<LuceneSearchResult>();
+				}
+
+				var count = Math.Min(hits.TotalHits, MaxHits);
+				var mergedResults = Enumerable.Range(0, count)
+					.Select(x => indexSearcher.Doc(hits.ScoreDocs[x].Doc))
+					.GroupBy(x =>
+					{
+						var field = _fields
+							.Where(y => y.IsUniqueKey)
+							.Select(y => x.GetField(y.Name))
+							.FirstOrDefault(y => y != null);
+						return field == null ? "" : field.StringValue;
+					})
+					.Where(x => x.Key != "")
+					.OrderByDescending(x => x.Count())
+					.Select(x => new LuceneSearchResult(x.Key, x));
+
+				var result = mergedResults
+					.Take(MaxResults)
+					.ToList();
+				return result;
+			}
+			catch (ParseException)
+			{
+				return new List<LuceneSearchResult>();
+			}
+		}
+
+		public IList<LuceneSearchResult> FindIntersection(string querystring)
+		{
+			var analyzer = new StandardAnalyzer(Version.LUCENE_30);
+			var fieldNames = _fields
+				.Where(x => x.IsSearchable)
+				.Where(x => !x.IsSystemDescriminator)
+				.Select(x => x.Name)
+				.ToArray();
+			var systemDescriminator = _fields.FirstOrDefault(x => x.IsSystemDescriminator);
+			var parser = new MultiFieldQueryParser(Version.LUCENE_30,
+				fieldNames,
+				analyzer);
+			var lowerQueryString = querystring.ToLower();
+
+			parser.DefaultOperator = QueryParser.Operator.AND;
+			try
+			{
+				var escaped = ReplaceDashesWithSpecialString(lowerQueryString, true);
+				escaped = EscapeLeadingWildcards(escaped);
+				var fullQuery = parser.Parse(escaped);
+				var rewrittenQueryString = fullQuery.ToString();
+				var clauses = rewrittenQueryString.Split(new[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
+
+				var luceneDirectory = _luceneFileSystem.GetLuceneDirectory();
+
+				var fsDirectory = FSDirectory.Open(new DirectoryInfo(luceneDirectory));
+				var indexSearcher = new IndexSearcher(fsDirectory, true);
+
+				var descriminatorClause = "";
+				if (systemDescriminator != null)
+				{
+					descriminatorClause = clauses.FirstOrDefault(y => y.StartsWith(systemDescriminator.Name + ":")) ?? "";
+				}
+
+				if (clauses.Length <= 1 || descriminatorClause.Length > 0 && clauses.Length == 2)
+				{
+					return FindClauseMatches(fullQuery, indexSearcher);
+				}
+
+				// force it to be an 'and' search by keeping only those uniqueIDs
+				// that show up in the search result for each independent clause
+				parser.DefaultOperator = QueryParser.Operator.OR;
+
+				var searchResultList = new List<LuceneSearchResult>();
+				foreach (var queryPart in clauses.Except(new[] { descriminatorClause }))
+				{
+					var query = descriminatorClause.Length > 0
+						? parser.Parse("+" + queryPart + " +" + descriminatorClause)
+						: parser.Parse(queryPart);
+					var partialResult = FindClauseMatches(query, indexSearcher);
+					if (!partialResult.Any())
+					{
+						// nothing matched this clause. since we are aggregating an AND
+						// result across multiple documents, we're done.
+						return partialResult;
+					}
+					searchResultList.AddRange(partialResult);
+				}
+				var expectedMatchingClauses = clauses.Length;
+				if (descriminatorClause.Length > 0)
+				{
+					expectedMatchingClauses--;
+				}
+				var mergedResult = searchResultList
+					.GroupBy(x => x.UniqueId)
+					.Where(x => x.Count() == expectedMatchingClauses)
+					.Select(x => x.First())
+					.ToList();
+				return mergedResult;
+			}
+			catch (ParseException)
+			{
+				return new List<LuceneSearchResult>();
+			}
+		}
+
 		public IList<LuceneSearchResult> FindUnion(string querystring)
 		{
 			var analyzer = new StandardAnalyzer(Version.LUCENE_30);
@@ -259,8 +259,8 @@ namespace MvbaCore.ThirdParty.Lucene
 				.Select(x => x.Name)
 				.ToArray();
 			var parser = new QueryParser(Version.LUCENE_30,
-			                             fieldNames[0],
-			                             analyzer)
+				fieldNames[0],
+				analyzer)
 			             {
 				             DefaultOperator = QueryParser.Operator.OR
 			             };

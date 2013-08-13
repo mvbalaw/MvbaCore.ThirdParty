@@ -182,7 +182,7 @@ namespace MvbaCore.ThirdParty.Messaging
 			messageWrapper.Processed = true;
 		}
 
-		private void LoadMessage(ICollection<MessageWrapper> messages, FileInfo file)
+		private void LoadMessage(ICollection<MessageWrapper> messages, FileSystemInfo file)
 		{
 			try
 			{

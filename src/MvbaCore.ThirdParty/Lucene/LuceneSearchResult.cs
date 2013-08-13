@@ -27,13 +27,13 @@ namespace MvbaCore.ThirdParty.Lucene
 				MatchedDocumentCount++;
 				foreach (Field field in doc.GetFields())
 				{
-					string stringValue = field.StringValue;
+					var stringValue = field.StringValue;
 					if (String.IsNullOrEmpty(stringValue))
 					{
 						continue;
 					}
 					string value;
-					string key = field.Name;
+					var key = field.Name;
 					if (!_matches.TryGetValue(key, out value))
 					{
 						_matches.Add(key, stringValue);

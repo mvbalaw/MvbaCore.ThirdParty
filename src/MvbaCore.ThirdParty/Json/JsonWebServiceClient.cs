@@ -1,12 +1,12 @@
-﻿//   * **************************************************************************
-//   * Copyright (c) McCreary, Veselka, Bragg & Allen, P.C.
-//   * This source code is subject to terms and conditions of the MIT License.
-//   * A copy of the license can be found in the License.txt file
-//   * at the root of this distribution.
-//   * By using this source code in any fashion, you are agreeing to be bound by
-//   * the terms of the MIT License.
-//   * You must not remove this notice from this software.
-//   * **************************************************************************
+﻿//  * **************************************************************************
+//  * Copyright (c) McCreary, Veselka, Bragg & Allen, P.C.
+//  * This source code is subject to terms and conditions of the MIT License.
+//  * A copy of the license can be found in the License.txt file
+//  * at the root of this distribution. 
+//  * By using this source code in any fashion, you are agreeing to be bound by 
+//  * the terms of the MIT License.
+//  * You must not remove this notice from this software.
+//  * **************************************************************************
 
 using System;
 using System.IO;
@@ -29,7 +29,7 @@ namespace MvbaCore.ThirdParty.Json
 		{
 			var req = CreateWebRequest(url);
 			req.Method = "POST";
-			string content = JsonUtility.SerializeForWebRequest(data);
+			var content = JsonUtility.SerializeForWebRequest(data);
 			SendRequest(req, content);
 			return GetResponse<TOutput>(req);
 		}
@@ -40,7 +40,7 @@ namespace MvbaCore.ThirdParty.Json
 			req.Method = "POST";
 			var memoryStream = new MemoryStream();
 			new DataContractJsonSerializer(typeof(TInput)).WriteObject(memoryStream, data);
-			byte[] json = memoryStream.ToArray();
+			var json = memoryStream.ToArray();
 			memoryStream.Close();
 			var content = Encoding.UTF8.GetString(json, 0, json.Length);
 			SendRequest(req, content);
@@ -79,7 +79,7 @@ namespace MvbaCore.ThirdParty.Json
 
 			using (var reader = new StreamReader(responseStream))
 			{
-				string s = reader.ReadToEnd();
+				var s = reader.ReadToEnd();
 				TOutput output;
 				try
 				{
@@ -87,10 +87,10 @@ namespace MvbaCore.ThirdParty.Json
 				}
 				catch (Exception exception)
 				{
-					var notification = new Notification<TOutput>( Notification.ErrorFor("caught exception deserializing:\n" + s + "\n" + exception.Message))
-						                   {
-							                   Item = default(TOutput)
-						                   };
+					var notification = new Notification<TOutput>(Notification.ErrorFor("caught exception deserializing:\n" + s + "\n" + exception.Message))
+					                   {
+						                   Item = default(TOutput)
+					                   };
 					return notification;
 				}
 				return output;
