@@ -57,7 +57,9 @@ namespace MvbaCore.ThirdParty.Json
 			var contractResolver = new HandlePrivateSettersDefaultContractResolver();
 			var settings = new JsonSerializerSettings
 			{
-				ContractResolver = contractResolver
+				ContractResolver = contractResolver,
+				TypeNameHandling = TypeNameHandling.Auto,
+				ObjectCreationHandling = ObjectCreationHandling.Auto
 			};
 			return settings;
 		}
