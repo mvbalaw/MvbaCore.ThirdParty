@@ -1,14 +1,4 @@
-﻿//   * **************************************************************************
-//   * Copyright (c) McCreary, Veselka, Bragg & Allen, P.C.
-//   * This source code is subject to terms and conditions of the MIT License.
-//   * A copy of the license can be found in the License.txt file
-//   * at the root of this distribution.
-//   * By using this source code in any fashion, you are agreeing to be bound by
-//   * the terms of the MIT License.
-//   * You must not remove this notice from this software.
-//   * **************************************************************************
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -19,78 +9,81 @@ namespace MvbaCore.ThirdParty.Json
 {
 	public static class JsonUtility
 	{
-		public static T Deserialize<T>(string s)
+		public static T Deserialize<T>(string s, bool useTypePropertyToMapConcreteObjects = false)
 		{
-			return JsonConvert.DeserializeObject<T>(s, GetJsonSerializerSettings());
+			return JsonConvert.DeserializeObject<T>(s, GetJsonSerializerSettings(useTypePropertyToMapConcreteObjects));
 		}
 
-		public static object Deserialize(string s, Type type)
+		public static object Deserialize(string s, Type type, bool useTypePropertyToMapConcreteObjects = false)
 		{
-			return JsonConvert.DeserializeObject(s, type, GetJsonSerializerSettings());
+			return JsonConvert.DeserializeObject(s, type, GetJsonSerializerSettings(useTypePropertyToMapConcreteObjects));
 		}
 
-		public static T DeserializeFromJsonFile<T>(string filePath)
+		public static T DeserializeFromJsonFile<T>(string filePath, bool useTypePropertyToMapConcreteObjects = false)
 		{
-			return (T)DeserializeFromJsonFile(filePath, typeof(T));
+			return (T)DeserializeFromJsonFile(filePath, typeof(T), useTypePropertyToMapConcreteObjects);
 		}
 
-		public static object DeserializeFromJsonFile(string filePath, Type type)
+		public static object DeserializeFromJsonFile(string filePath, Type type, bool useTypePropertyToMapConcreteObjects = false)
 		{
-			var serializer = JsonSerializer.Create(GetJsonSerializerSettings());
+			var serializer = JsonSerializer.Create(GetJsonSerializerSettings(useTypePropertyToMapConcreteObjects));
 			using (var reader = new StreamReader(filePath))
 			{
 				return serializer.Deserialize(reader, type);
 			}
 		}
 
-		public static object DeserializeFromStream(Stream stream, Type type)
+		public static object DeserializeFromStream(Stream stream, Type type, bool useTypePropertyToMapConcreteObjects = false)
 		{
-			var serializer = JsonSerializer.Create(GetJsonSerializerSettings());
+			var serializer = JsonSerializer.Create(GetJsonSerializerSettings(useTypePropertyToMapConcreteObjects));
 			using (var reader = new StreamReader(stream))
 			{
 				return serializer.Deserialize(reader, type);
 			}
 		}
 
-		private static JsonSerializerSettings GetJsonSerializerSettings()
+		private static JsonSerializerSettings GetJsonSerializerSettings(bool useTypePropertyToMapConcreteObjects)
 		{
 			var contractResolver = new HandlePrivateSettersDefaultContractResolver();
 			var settings = new JsonSerializerSettings
+			               {
+				               ContractResolver = contractResolver,
+				               ObjectCreationHandling = ObjectCreationHandling.Auto
+			               };
+			if (useTypePropertyToMapConcreteObjects)
 			{
-				ContractResolver = contractResolver,
-				TypeNameHandling = TypeNameHandling.Auto,
-				ObjectCreationHandling = ObjectCreationHandling.Auto
-			};
+				settings.TypeNameHandling = TypeNameHandling.Auto;
+			}
 			return settings;
 		}
 
 		public static string SerializeForComparison<T>(T obj)
 		{
 			return JsonConvert.SerializeObject(obj, Formatting.Indented, new JsonSerializerSettings
-			{
-				TypeNameHandling = TypeNameHandling.None,
-				ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-				Converters = new List<JsonConverter>
-                        {
-                            new IsoDateTimeConverter()
-                        }
-			});
+			                                                             {
+				                                                             TypeNameHandling = TypeNameHandling.None,
+				                                                             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+				                                                             Converters = new List<JsonConverter>
+				                                                                          {
+					                                                                          new IsoDateTimeConverter()
+				                                                                          }
+			                                                             });
 		}
 
 		public static string SerializeForWebRequest<T>(T obj)
 		{
 			return JsonConvert.SerializeObject(obj, Formatting.Indented, new JsonSerializerSettings
-			{
-				TypeNameHandling = TypeNameHandling.All
-			});
+			                                                             {
+				                                                             TypeNameHandling = TypeNameHandling.All
+			                                                             });
 		}
 
 		public static void SerializeToFile<T>(T obj, string filePath)
 		{
 			var serializer = new JsonSerializer
-			{
-				TypeNameHandling = TypeNameHandling.All
-			};
+			                 {
+				                 TypeNameHandling = TypeNameHandling.All
+			                 };
 
 			using (var streamWriter = new StreamWriter(filePath))
 			{
@@ -108,10 +101,10 @@ namespace MvbaCore.ThirdParty.Json
 		public static void SerializeToStream<T>(T obj, TextWriter fileStream)
 		{
 			var serializer = new JsonSerializer
-			{
-				TypeNameHandling = TypeNameHandling.All,
-				PreserveReferencesHandling = PreserveReferencesHandling.Objects,
-			};
+			                 {
+				                 TypeNameHandling = TypeNameHandling.All,
+				                 PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+			                 };
 			serializer.Converters.Add(new IsoDateTimeConverter());
 
 			using (var streamWriter = fileStream)
