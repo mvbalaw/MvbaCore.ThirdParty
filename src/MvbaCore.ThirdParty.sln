@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvbaCore.ThirdParty", "MvbaCore.ThirdParty\MvbaCore.ThirdParty.csproj", "{A0C2CC75-8F2D-4E45-8F1C-4A3C0E25CD7D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvbaCore.ThirdParty.Tests", "MvbaCore.ThirdParty.Tests\MvbaCore.ThirdParty.Tests.csproj", "{B80DE709-6974-4C5D-B6D0-135BF644019A}"
