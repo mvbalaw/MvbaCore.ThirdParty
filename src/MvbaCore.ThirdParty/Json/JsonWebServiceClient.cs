@@ -10,7 +10,6 @@
 
 using System;
 using System.IO;
-using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
 
@@ -25,87 +24,53 @@ namespace MvbaCore.ThirdParty.Json
 
 	public class JsonWebServiceClient : IJsonWebServiceClient
 	{
+		private const string ApplicationJsonContentType = "application/json";
+
 		public TOutput Post<TInput, TOutput>(string url, TInput data)
 		{
-			var req = CreateWebRequest(url);
-			req.Method = "POST";
 			var content = JsonUtility.SerializeForWebRequest(data);
-			SendRequest(req, content);
-			return GetResponse<TOutput>(req);
+			var result = new WebServiceClient().Post(url, content, ApplicationJsonContentType);
+			return GetResponse<TOutput>(result);
 		}
 
 		public TOutput PostDataContract<TInput, TOutput>(string url, TInput data)
 		{
-			var req = CreateWebRequest(url);
-			req.Method = "POST";
 			var memoryStream = new MemoryStream();
 			new DataContractJsonSerializer(typeof(TInput)).WriteObject(memoryStream, data);
 			var json = memoryStream.ToArray();
 			memoryStream.Close();
 			var content = Encoding.UTF8.GetString(json, 0, json.Length);
-			SendRequest(req, content);
-			return GetResponse<TOutput>(req);
+			var result = new WebServiceClient().Post(url, content, ApplicationJsonContentType);
+			return GetResponse<TOutput>(result);
 		}
 
 		public TOutput Post<TOutput>(string url)
 		{
-			var req = CreateWebRequest(url);
-			req.Method = "POST";
-			AddUserCredentials(req);
-			req.GetRequestStream().Close();
-			return GetResponse<TOutput>(req);
+			var result = new WebServiceClient().Post(url, ApplicationJsonContentType);
+			return GetResponse<TOutput>(result);
 		}
 
-		private static void AddUserCredentials(WebRequest req)
+		private static Notification<TOutput> GetResponse<TOutput>(Notification<string> result)
 		{
-			req.Credentials = CredentialCache.DefaultCredentials;
-		}
-
-		private static HttpWebRequest CreateWebRequest(string url)
-		{
-			var req = (HttpWebRequest)WebRequest.Create(url);
-			req.ContentType = "application/json";
-			return req;
-		}
-
-		private static Notification<TOutput> GetResponse<TOutput>(WebRequest req)
-		{
-			var response = req.GetResponse();
-			var responseStream = response.GetResponseStream();
-			if (responseStream == null)
+			if (result.Item == null)
 			{
-				return new Notification<TOutput>(Notification.ErrorFor("received null response stream"));
+				return new Notification<TOutput>(result);
 			}
 
-			using (var reader = new StreamReader(responseStream))
+			TOutput output;
+			try
 			{
-				var s = reader.ReadToEnd();
-				TOutput output;
-				try
-				{
-					output = JsonUtility.Deserialize<TOutput>(s);
-				}
-				catch (Exception exception)
-				{
-					var notification = new Notification<TOutput>(Notification.ErrorFor("caught exception deserializing:\n" + s + "\n" + exception.Message))
-					                   {
-						                   Item = default(TOutput)
-					                   };
-					return notification;
-				}
-				return output;
+				output = JsonUtility.Deserialize<TOutput>(result);
 			}
-		}
-
-		private static void SendRequest(WebRequest req, string content)
-		{
-			AddUserCredentials(req);
-			req.ContentLength = content.Length;
-
-			using (var streamWriter = new StreamWriter(req.GetRequestStream(), Encoding.ASCII))
+			catch (Exception exception)
 			{
-				streamWriter.Write(content);
+				var notification = new Notification<TOutput>(Notification.ErrorFor("caught exception deserializing:\n" + result.Item + "\n" + exception.Message))
+				                   {
+					                   Item = default(TOutput)
+				                   };
+				return notification;
 			}
+			return output;
 		}
 	}
 }
