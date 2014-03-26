@@ -39,7 +39,9 @@ namespace MvbaCore.ThirdParty
 				var content = "room_id=" + HttpUtility.UrlEncode(hipChatMessage.RoomId)
 					+ "&from=" + HttpUtility.UrlEncode(hipChatMessage.From)
 					+ "&message=" + HttpUtility.UrlEncode(hipChatMessage.Message)
-					+ "&color=" + hipChatMessage.Color.OrDefault().Key;
+					+ "&color=" + hipChatMessage.Color.OrDefault().Key
+					+ "&message_format=" + hipChatMessage.MessageFormat.OrDefault().Key
+					+ "&notify=" + (hipChatMessage.Notify ? 1 : 0);
 				var result = _webServiceClient.Post(String.Format(ApiUrl, hipChatMessage.ApiKey), content, "application/x-www-form-urlencoded");
 				return JsonUtility.Deserialize<HipChatResult>(result);
 			}
@@ -70,12 +72,26 @@ namespace MvbaCore.ThirdParty
 		public static readonly HipChatTextColor Yellow = new HipChatTextColor("yellow");
 	}
 
+	public class HipChatMessageFormat : NamedConstant<HipChatMessageFormat>
+	{
+		private HipChatMessageFormat(string key)
+		{
+			base.Add(key, this);
+		}
+
+		[DefaultKey]
+		public static readonly HipChatMessageFormat Html = new HipChatMessageFormat("html");
+		public static readonly HipChatMessageFormat Text = new HipChatMessageFormat("text");
+	}
+
 	public class HipChatMessage
 	{
 		public HipChatTextColor Color { get; set; }
 		public string From { get; set; }
 		public string Message { get; set; }
+		public HipChatMessageFormat MessageFormat { get; set; }
 		public string RoomId { get; set; }
 		public string ApiKey { get; set; }
+		public bool Notify { get; set; }
 	}
 }
