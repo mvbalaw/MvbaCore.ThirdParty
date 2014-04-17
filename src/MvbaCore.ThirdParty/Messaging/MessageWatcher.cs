@@ -32,7 +32,7 @@ namespace MvbaCore.ThirdParty.Messaging
 	public interface IMessageHandler
 	{
 		bool CanHandle(MessageRequest messageRequest);
-		bool Handle(MessageRequest header, string dataFilePath);
+		Notification<bool?> Handle(MessageRequest header, string dataFilePath);
 		void Quiesce();
 	}
 
@@ -157,6 +157,30 @@ namespace MvbaCore.ThirdParty.Messaging
 			}
 		}
 
+		private void HandleError(MessageWrapper messageWrapper, string reason, NotificationBase notification)
+		{
+			if (!_fileSystemService.FileExists(messageWrapper.File))
+			{
+				return;
+			}
+			MoveMessageRequestToErrorDirectory(messageWrapper.File);
+			if (!notification.HasErrors)
+			{
+				Logger.Log(NotificationSeverity.Error, reason);
+				//// ReSharper disable AssignNullToNotNullAttribute
+				File.WriteAllText(Path.Combine(_errorMessageDirectory, Path.GetFileName(messageWrapper.File + ErrorReasonFileExtension)), reason);
+				//// ReSharper restore AssignNullToNotNullAttribute
+			}
+			else
+			{
+				//// ReSharper disable AssignNullToNotNullAttribute
+				File.WriteAllText(Path.Combine(_errorMessageDirectory, Path.GetFileName(messageWrapper.File + ErrorReasonFileExtension)), reason + Environment.NewLine + notification);
+				//// ReSharper restore AssignNullToNotNullAttribute
+			}
+
+			messageWrapper.Processed = true;
+		}
+
 		private void HandleError(MessageWrapper messageWrapper, string reason, Exception exception = null)
 		{
 			if (!_fileSystemService.FileExists(messageWrapper.File))
@@ -175,10 +199,10 @@ namespace MvbaCore.ThirdParty.Messaging
 			{
 				Logger.Log(NotificationSeverity.Error, reason, exception);
 //// ReSharper disable AssignNullToNotNullAttribute
-				File.WriteAllText(Path.Combine(_errorMessageDirectory, Path.GetFileName(messageWrapper.File + ErrorReasonFileExtension)),reason+Environment.NewLine+exception);
+				File.WriteAllText(Path.Combine(_errorMessageDirectory, Path.GetFileName(messageWrapper.File + ErrorReasonFileExtension)), reason + Environment.NewLine + exception);
 //// ReSharper restore AssignNullToNotNullAttribute
 			}
-		
+
 			messageWrapper.Processed = true;
 		}
 
@@ -306,10 +330,15 @@ namespace MvbaCore.ThirdParty.Messaging
 				var dataFileName =
 					// ReSharper disable AssignNullToNotNullAttribute
 					Path.Combine(Path.GetDirectoryName(messageWrapper.File), Path.GetFileNameWithoutExtension(messageWrapper.File)) +
-					// ReSharper restore AssignNullToNotNullAttribute
-					Constants.MessageDataFileExtension;
-				var deleteFile = handlers.Single().Handle(messageWrapper.Header, dataFileName);
-				if (deleteFile)
+						// ReSharper restore AssignNullToNotNullAttribute
+						Constants.MessageDataFileExtension;
+				var result = handlers.Single().Handle(messageWrapper.Header, dataFileName);
+				var deletefile = (bool?)result;
+				if (deletefile == null)
+				{
+					return; // unable to handle message at this time, try again later
+				}
+				if (deletefile.Value)
 				{
 					// ReSharper disable AssignNullToNotNullAttribute
 					var newFile = Path.Combine(_archiveDirectory, Path.GetFileName(messageWrapper.File));
@@ -332,7 +361,7 @@ namespace MvbaCore.ThirdParty.Messaging
 				}
 				else
 				{
-					HandleError(messageWrapper, "=> Failed to process " + messageWrapper.File);
+					HandleError(messageWrapper, "=> Failed to process " + messageWrapper.File, result);
 				}
 				messageWrapper.Processed = true;
 			}
