@@ -419,9 +419,13 @@ namespace MvbaCore.ThirdParty.Messaging
 				}
 				if (_fileSystemService.FileExists(Path.Combine(_messageDir, Path.GetFileNameWithoutExtension(headerFile) + Constants.MessageDataFileExtension)))
 				{
-					//// ReSharper disable AssignNullToNotNullAttribute
-					_fileSystemService.MoveFile(headerFile, Path.Combine(_messageDir, Path.GetFileName(headerFile)));
-					//// ReSharper restore AssignNullToNotNullAttribute
+					try
+					{
+						_fileSystemService.MoveFile(headerFile, Path.Combine(_messageDir, Path.GetFileName(headerFile)));
+					}
+					catch (Exception)
+					{
+					}
 				}
 			}
 
