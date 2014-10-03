@@ -333,31 +333,38 @@ namespace MvbaCore.ThirdParty.Messaging
 						// ReSharper restore AssignNullToNotNullAttribute
 						Constants.MessageDataFileExtension;
 				var result = handlers.Single().Handle(messageWrapper.Header, dataFileName);
-				var deletefile = (bool?)result;
-				if (deletefile == null)
+				if (!result.HasErrors)
 				{
-					return; // unable to handle message at this time, try again later
-				}
-				if (deletefile.Value)
-				{
-					// ReSharper disable AssignNullToNotNullAttribute
-					var newFile = Path.Combine(_archiveDirectory, Path.GetFileName(messageWrapper.File));
-					// ReSharper restore AssignNullToNotNullAttribute
-					if (_fileSystemService.FileExists(newFile))
+					var deletefile = (bool?)result;
+					if (deletefile == null)
 					{
-						_fileSystemService.DeleteFile(newFile);
+						return; // unable to handle message at this time, try again later
 					}
-
-					TryMoveFileUntilSuccessful(messageWrapper.File, newFile);
-
-					// ReSharper disable AssignNullToNotNullAttribute
-					newFile = Path.Combine(_archiveDirectory, Path.GetFileName(dataFileName));
-					// ReSharper restore AssignNullToNotNullAttribute
-					if (_fileSystemService.FileExists(newFile))
+					if (deletefile.Value)
 					{
-						_fileSystemService.DeleteFile(newFile);
+						// ReSharper disable AssignNullToNotNullAttribute
+						var newFile = Path.Combine(_archiveDirectory, Path.GetFileName(messageWrapper.File));
+						// ReSharper restore AssignNullToNotNullAttribute
+						if (_fileSystemService.FileExists(newFile))
+						{
+							_fileSystemService.DeleteFile(newFile);
+						}
+
+						TryMoveFileUntilSuccessful(messageWrapper.File, newFile);
+
+						// ReSharper disable AssignNullToNotNullAttribute
+						newFile = Path.Combine(_archiveDirectory, Path.GetFileName(dataFileName));
+						// ReSharper restore AssignNullToNotNullAttribute
+						if (_fileSystemService.FileExists(newFile))
+						{
+							_fileSystemService.DeleteFile(newFile);
+						}
+						_fileSystemService.MoveFile(dataFileName, newFile);
 					}
-					_fileSystemService.MoveFile(dataFileName, newFile);
+					else
+					{
+						HandleError(messageWrapper, "=> Failed to process " + messageWrapper.File, result);
+					}
 				}
 				else
 				{
