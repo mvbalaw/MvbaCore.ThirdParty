@@ -17,7 +17,7 @@ namespace MvbaCore.ThirdParty.Json
 {
 	public interface IJsonWebServiceClient
 	{
-		TOutput Post<TInput, TOutput>(string url, TInput data);
+		Notification<TOutput> Post<TInput, TOutput>(string url, TInput data);
 		TOutput Post<TOutput>(string url);
 		TOutput PostDataContract<TInput, TOutput>(string url, TInput data);
 	}
@@ -26,7 +26,7 @@ namespace MvbaCore.ThirdParty.Json
 	{
 		private const string ApplicationJsonContentType = "application/json";
 
-		public TOutput Post<TInput, TOutput>(string url, TInput data)
+		public Notification<TOutput> Post<TInput, TOutput>(string url, TInput data)
 		{
 			var content = JsonUtility.SerializeForWebRequest(data);
 			var result = new WebServiceClient().Post(url, content, ApplicationJsonContentType);
