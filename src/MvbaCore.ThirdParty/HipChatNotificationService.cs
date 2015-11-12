@@ -61,7 +61,7 @@ namespace MvbaCore.ThirdParty
 	{
 		private HipChatTextColor(string key)
 		{
-			base.Add(key, this);
+			Add(key, this);
 		}
 
 		[DefaultKey]
@@ -76,7 +76,7 @@ namespace MvbaCore.ThirdParty
 	{
 		private HipChatMessageFormat(string key)
 		{
-			base.Add(key, this);
+			Add(key, this);
 		}
 
 		[DefaultKey]

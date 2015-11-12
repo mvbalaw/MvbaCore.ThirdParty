@@ -82,7 +82,7 @@ namespace MvbaCore.ThirdParty.Lucene
 			}
 			var escaped = new StringBuilder();
 
-			var parts = input.Split(new[] { ' ' });
+			var parts = input.Split(' ');
 			if (parts.Length == 1)
 			{
 				return input;

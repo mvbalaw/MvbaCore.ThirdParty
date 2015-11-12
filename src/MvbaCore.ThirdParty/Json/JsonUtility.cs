@@ -103,7 +103,7 @@ namespace MvbaCore.ThirdParty.Json
 			var serializer = new JsonSerializer
 			                 {
 				                 TypeNameHandling = TypeNameHandling.All,
-				                 PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+				                 PreserveReferencesHandling = PreserveReferencesHandling.Objects
 			                 };
 			serializer.Converters.Add(new IsoDateTimeConverter());
 
