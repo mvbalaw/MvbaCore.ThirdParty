@@ -18,3 +18,4 @@ dist/
 !tools/NUnit/bin
 dist.bat
 src/packages
+src/MvbaCore.ThirdParty.Tests/FluentAssert.*
