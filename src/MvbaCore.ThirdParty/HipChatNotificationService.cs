@@ -9,6 +9,8 @@
 //  * **************************************************************************
 
 using System;
+using System.IO;
+using System.Net;
 using System.Web;
 
 using MvbaCore.Extensions;
@@ -19,11 +21,13 @@ namespace MvbaCore.ThirdParty
 	public interface IHipChatNotificationService
 	{
 		Notification<HipChatResult> Notify(HipChatMessage hipChatMessage);
+		Notification<HipChatResult> PrivateMessage(PrivateHipChatMessage hipChatMessage);
 	}
 
 	public class HipChatNotificationService : IHipChatNotificationService
 	{
-		private const string ApiUrl = "http://api.hipchat.com/v1/rooms/message?auth_token={0}&format=json";
+		private const string ApiMessageRoomUrl = "http://api.hipchat.com/v1/rooms/message?auth_token={0}&format=json";
+		private const string ApiMessageUserUrl = "http://api.hipchat.com/v2/user/{0}/message?auth_token={1}&format=json";
 
 		public HipChatNotificationService(IWebServiceClient webServiceClient)
 		{
@@ -42,8 +46,65 @@ namespace MvbaCore.ThirdParty
 					+ "&color=" + hipChatMessage.Color.OrDefault().Key
 					+ "&message_format=" + hipChatMessage.MessageFormat.OrDefault().Key
 					+ "&notify=" + (hipChatMessage.Notify ? 1 : 0);
-				var result = _webServiceClient.Post(String.Format(ApiUrl, hipChatMessage.ApiKey), content, "application/x-www-form-urlencoded");
+				var result = _webServiceClient.Post(String.Format(ApiMessageRoomUrl, hipChatMessage.ApiKey), content, "application/x-www-form-urlencoded");
 				return JsonUtility.Deserialize<HipChatResult>(result);
+			}
+			catch (WebException exception)
+			{
+				// from http://stackoverflow.com/a/1140193/102536
+				if (exception.Response != null)
+				{
+					if (exception.Response.ContentLength != 0)
+					{
+						using (var stream = exception.Response.GetResponseStream())
+						{
+							// ReSharper disable once AssignNullToNotNullAttribute
+							using (var reader = new StreamReader(stream))
+							{
+								var message = reader.ReadToEnd();
+								return new Notification<HipChatResult>(Notification.ErrorFor(message));
+							}
+						}
+					}
+				}
+				return new Notification<HipChatResult>(Notification.ErrorFor(exception.ToString()));
+			}
+			catch (Exception exception)
+			{
+				return new Notification<HipChatResult>(Notification.ErrorFor(exception.ToString()));
+			}
+		}
+		public Notification<HipChatResult> PrivateMessage(PrivateHipChatMessage hipChatMessage)
+		{
+			try
+			{
+				var content = string.Format(@"{{
+""message"": ""{0}"",
+""message_format"": ""{1}"",
+""notify"": ""{2}""
+}}", hipChatMessage.Message.Replace("\"", "\"\""), hipChatMessage.MessageFormat.OrDefault().Key, hipChatMessage.Notify.ToString().ToLower());
+				var result = _webServiceClient.Post(String.Format(ApiMessageUserUrl, hipChatMessage.To, hipChatMessage.ApiKey), content, "application/json");
+				return JsonUtility.Deserialize<HipChatResult>(result);
+			}
+			catch (WebException exception)
+			{
+				// from http://stackoverflow.com/a/1140193/102536
+				if (exception.Response != null)
+				{
+					if (exception.Response.ContentLength != 0)
+					{
+						using (var stream = exception.Response.GetResponseStream())
+						{
+							// ReSharper disable once AssignNullToNotNullAttribute
+							using (var reader = new StreamReader(stream))
+							{
+								var message = reader.ReadToEnd();
+								return new Notification<HipChatResult>(Notification.ErrorFor(message));
+							}
+						}
+					}
+				}
+				return new Notification<HipChatResult>(Notification.ErrorFor(exception.ToString()));
 			}
 			catch (Exception exception)
 			{
@@ -93,5 +154,14 @@ namespace MvbaCore.ThirdParty
 		public string RoomId { get; set; }
 		public string ApiKey { get; set; }
 		public bool Notify { get; set; }
+	}
+	public class PrivateHipChatMessage
+	{
+		public string From { get; set; }
+		public string Message { get; set; }
+		public HipChatMessageFormat MessageFormat { get; set; }
+		public string ApiKey { get; set; }
+		public bool Notify { get; set; }
+		public string To { get; set; }
 	}
 }
