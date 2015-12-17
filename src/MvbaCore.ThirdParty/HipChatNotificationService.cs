@@ -11,6 +11,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Runtime.Serialization.Json;
 using System.Web;
 
 using MvbaCore.Extensions;
@@ -74,15 +75,16 @@ namespace MvbaCore.ThirdParty
 				return new Notification<HipChatResult>(Notification.ErrorFor(exception.ToString()));
 			}
 		}
+
 		public Notification<HipChatResult> PrivateMessage(PrivateHipChatMessage hipChatMessage)
 		{
 			try
 			{
 				var content = string.Format(@"{{
-""message"": ""{0}"",
+""message"": {0},
 ""message_format"": ""{1}"",
 ""notify"": ""{2}""
-}}", hipChatMessage.Message.Replace("\"", "\"\""), hipChatMessage.MessageFormat.OrDefault().Key, hipChatMessage.Notify.ToString().ToLower());
+}}", EscapeJsonSpecials(hipChatMessage.Message), hipChatMessage.MessageFormat.OrDefault().Key, hipChatMessage.Notify.ToString().ToLower());
 				var result = _webServiceClient.Post(String.Format(ApiMessageUserUrl, hipChatMessage.To, hipChatMessage.ApiKey), content, "application/json");
 				return JsonUtility.Deserialize<HipChatResult>(result);
 			}
@@ -110,6 +112,16 @@ namespace MvbaCore.ThirdParty
 			{
 				return new Notification<HipChatResult>(Notification.ErrorFor(exception.ToString()));
 			}
+		}
+
+		private static string EscapeJsonSpecials(string input)
+		{
+			var stream = new MemoryStream();
+			var serializer = new DataContractJsonSerializer(typeof(string));
+			serializer.WriteObject(stream, input);
+			stream.Position = 0;
+			var sr = new StreamReader(stream);
+			return sr.ReadToEnd();
 		}
 	}
 
@@ -155,6 +167,7 @@ namespace MvbaCore.ThirdParty
 		public string ApiKey { get; set; }
 		public bool Notify { get; set; }
 	}
+
 	public class PrivateHipChatMessage
 	{
 		public string From { get; set; }
