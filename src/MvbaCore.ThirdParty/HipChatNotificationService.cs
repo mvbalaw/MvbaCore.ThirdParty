@@ -9,6 +9,7 @@
 //  * **************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Runtime.Serialization.Json;
@@ -41,14 +42,20 @@ namespace MvbaCore.ThirdParty
 		{
 			try
 			{
-				var content = "room_id=" + HttpUtility.UrlEncode(hipChatMessage.RoomId)
-					+ "&from=" + HttpUtility.UrlEncode(hipChatMessage.From)
-					+ "&message=" + HttpUtility.UrlEncode(hipChatMessage.Message)
-					+ "&color=" + hipChatMessage.Color.OrDefault().Key
-					+ "&message_format=" + hipChatMessage.MessageFormat.OrDefault().Key
-					+ "&notify=" + (hipChatMessage.Notify ? 1 : 0);
-				var result = _webServiceClient.Post(String.Format(ApiMessageRoomUrl, hipChatMessage.ApiKey), content, "application/x-www-form-urlencoded");
-				return JsonUtility.Deserialize<HipChatResult>(result);
+				var notification  = new Notification<HipChatResult>();
+				foreach (var partialMessage in HttpUtility.UrlEncode(hipChatMessage.Message).InSetsOf(5000))
+				{
+					var content = "room_id=" + HttpUtility.UrlEncode(hipChatMessage.RoomId)
+						+ "&from=" + HttpUtility.UrlEncode(hipChatMessage.From)
+						+ "&message=" + new String(partialMessage.ToArray())
+						+ "&color=" + hipChatMessage.Color.OrDefault().Key
+						+ "&message_format=" + hipChatMessage.MessageFormat.OrDefault().Key
+						+ "&notify=" + (hipChatMessage.Notify ? 1 : 0);
+					var result = _webServiceClient.Post(String.Format(ApiMessageRoomUrl, hipChatMessage.ApiKey), content, "application/x-www-form-urlencoded");
+					var r = JsonUtility.Deserialize<HipChatResult>(result);
+					notification.Item = r;
+				}
+				return notification;
 			}
 			catch (WebException exception)
 			{
@@ -80,13 +87,18 @@ namespace MvbaCore.ThirdParty
 		{
 			try
 			{
-				var content = string.Format(@"{{
+				var notification  = new Notification<HipChatResult>();
+				foreach (var partialMessage in EscapeJsonSpecials(hipChatMessage.Message).InSetsOf(5000))
+				{
+					var content = string.Format(@"{{
 ""message"": {0},
 ""message_format"": ""{1}"",
 ""notify"": ""{2}""
-}}", EscapeJsonSpecials(hipChatMessage.Message), hipChatMessage.MessageFormat.OrDefault().Key, hipChatMessage.Notify.ToString().ToLower());
-				var result = _webServiceClient.Post(String.Format(ApiMessageUserUrl, hipChatMessage.To, hipChatMessage.ApiKey), content, "application/json");
-				return JsonUtility.Deserialize<HipChatResult>(result);
+}}", new String(partialMessage.ToArray()), hipChatMessage.MessageFormat.OrDefault().Key, hipChatMessage.Notify.ToString().ToLower());
+					var result = _webServiceClient.Post(String.Format(ApiMessageUserUrl, hipChatMessage.To, hipChatMessage.ApiKey), content, "application/json");
+					notification.Item = JsonUtility.Deserialize<HipChatResult>(result);
+				}
+				return notification;
 			}
 			catch (WebException exception)
 			{
