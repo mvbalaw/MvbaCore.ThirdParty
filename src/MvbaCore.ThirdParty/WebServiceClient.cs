@@ -8,6 +8,7 @@
 //  * You must not remove this notice from this software.
 //  * **************************************************************************
 
+using System;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -16,9 +17,9 @@ namespace MvbaCore.ThirdParty
 {
 	public interface IWebServiceClient
 	{
-		string Post(string url, string data, string contentType);
-		string Post(string url, string contentType);
-		string PostDataContract(string url, string data, string contentType);
+		Notification<string> Post(string url, string data, string contentType);
+		Notification<string> Post(string url, string contentType);
+		Notification<string> PostDataContract(string url, string data, string contentType);
 	}
 
 	public class WebServiceClient : IWebServiceClient
@@ -37,7 +38,17 @@ namespace MvbaCore.ThirdParty
 
 		private static Notification<string> GetResponse(WebRequest req)
 		{
-			var response = req.GetResponse();
+			WebResponse response;
+			try
+			{
+				response = req.GetResponse();
+			}
+			catch (Exception exception)
+			{
+				var notification = new Notification<string>(Notification.ErrorFor("Remote threw Exception: "+exception.Message));
+				notification.Add(Notification.InfoFor(exception.StackTrace));
+				return notification;
+			}
 			var responseStream = response.GetResponseStream();
 			if (responseStream == null)
 			{
@@ -54,7 +65,7 @@ namespace MvbaCore.ThirdParty
 			}
 		}
 
-		public string Post(string url, string content, string contentType)
+		public Notification<string> Post(string url, string content, string contentType)
 		{
 			var req = CreateWebRequest(url, contentType);
 			req.Method = "POST";
@@ -62,7 +73,7 @@ namespace MvbaCore.ThirdParty
 			return GetResponse(req);
 		}
 
-		public string Post(string url, string contentType)
+		public Notification<string> Post(string url, string contentType)
 		{
 			var req = CreateWebRequest(url, contentType);
 			req.Method = "POST";
@@ -71,7 +82,7 @@ namespace MvbaCore.ThirdParty
 			return GetResponse(req);
 		}
 
-		public string PostDataContract(string url, string content, string contentType)
+		public Notification<string> PostDataContract(string url, string content, string contentType)
 		{
 			var req = CreateWebRequest(url, contentType);
 			req.Method = "POST";

@@ -57,10 +57,25 @@ namespace MvbaCore.ThirdParty.Json
 				return new Notification<TOutput>(result);
 			}
 
+			RemoteException ex;
+			try
+			{
+				ex = JsonUtility.Deserialize<RemoteException>(result.Item);
+				if (!ex.Message.IsNullOrEmpty() && !ex.StackTrace.IsNullOrEmpty())
+				{
+					var notification = new Notification<TOutput>(Notification.ErrorFor("Remote returned Exception: "+ex.Message));
+					notification.Add(Notification.InfoFor(ex.StackTrace));
+					return notification;
+				}
+			}
+			catch
+			{
+			}
+
 			TOutput output;
 			try
 			{
-				output = JsonUtility.Deserialize<TOutput>(result);
+				output = JsonUtility.Deserialize<TOutput>(result.Item);
 			}
 			catch (Exception exception)
 			{
@@ -72,5 +87,11 @@ namespace MvbaCore.ThirdParty.Json
 			}
 			return output;
 		}
+	}
+
+	public class RemoteException
+	{
+		public string Message { get; set; }
+		public string StackTrace { get; set; }
 	}
 }
