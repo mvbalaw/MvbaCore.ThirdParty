@@ -13,15 +13,18 @@ using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
 
+using JetBrains.Annotations;
+
 namespace MvbaCore.ThirdParty.Json
 {
 	public interface IJsonWebServiceClient
 	{
 		Notification<TOutput> Post<TInput, TOutput>(string url, TInput data);
-		TOutput Post<TOutput>(string url);
-		TOutput PostDataContract<TInput, TOutput>(string url, TInput data);
+		Notification<TOutput> Post<TOutput>(string url);
+		Notification<TOutput> PostDataContract<TInput, TOutput>(string url, TInput data);
 	}
 
+	[UsedImplicitly]
 	public class JsonWebServiceClient : IJsonWebServiceClient
 	{
 		private const string ApplicationJsonContentType = "application/json";
@@ -33,7 +36,7 @@ namespace MvbaCore.ThirdParty.Json
 			return GetResponse<TOutput>(result);
 		}
 
-		public TOutput PostDataContract<TInput, TOutput>(string url, TInput data)
+		public Notification<TOutput> PostDataContract<TInput, TOutput>(string url, TInput data)
 		{
 			var memoryStream = new MemoryStream();
 			new DataContractJsonSerializer(typeof(TInput)).WriteObject(memoryStream, data);
@@ -44,7 +47,7 @@ namespace MvbaCore.ThirdParty.Json
 			return GetResponse<TOutput>(result);
 		}
 
-		public TOutput Post<TOutput>(string url)
+		public Notification<TOutput> Post<TOutput>(string url)
 		{
 			var result = new WebServiceClient().Post(url, ApplicationJsonContentType);
 			return GetResponse<TOutput>(result);
@@ -57,10 +60,9 @@ namespace MvbaCore.ThirdParty.Json
 				return new Notification<TOutput>(result);
 			}
 
-			RemoteException ex;
 			try
 			{
-				ex = JsonUtility.Deserialize<RemoteException>(result.Item);
+				var ex = JsonUtility.Deserialize<RemoteException>(result.Item);
 				if (!ex.Message.IsNullOrEmpty() && !ex.StackTrace.IsNullOrEmpty())
 				{
 					var notification = new Notification<TOutput>(Notification.ErrorFor("Remote returned Exception: "+ex.Message));
@@ -79,10 +81,7 @@ namespace MvbaCore.ThirdParty.Json
 			}
 			catch (Exception exception)
 			{
-				var notification = new Notification<TOutput>(Notification.ErrorFor("caught exception deserializing:\n" + result.Item + "\n" + exception.Message))
-				                   {
-					                   Item = default(TOutput)
-				                   };
+				var notification = new Notification<TOutput>(Notification.ErrorFor("caught exception deserializing:\n" + result.Item + "\n" + exception.Message));
 				return notification;
 			}
 			return output;
