@@ -53,6 +53,11 @@ namespace MvbaCore.ThirdParty
 						+ "&message_format=" + hipChatMessage.MessageFormat.OrDefault().Key
 						+ "&notify=" + (hipChatMessage.Notify ? 1 : 0);
 					var result = _webServiceClient.Post(String.Format(ApiMessageRoomUrl, hipChatMessage.ApiKey), content, "application/x-www-form-urlencoded");
+					if (!result.IsValid)
+					{
+						notification.Add(result);
+						break;
+					}
 					var r = JsonUtility.Deserialize<HipChatResult>(result);
 					notification.Item = r;
 				}
@@ -98,6 +103,11 @@ namespace MvbaCore.ThirdParty
 ""notify"": ""{2}""
 }}", message, hipChatMessage.MessageFormat.OrDefault().Key, hipChatMessage.Notify.ToString().ToLower());
 					var result = _webServiceClient.Post(String.Format(ApiMessageUserUrl, hipChatMessage.To, hipChatMessage.ApiKey), content, "application/json");
+					if (!result.IsValid)
+					{
+						notification.Add(result);
+						break;
+					}
 					notification.Item = JsonUtility.Deserialize<HipChatResult>(result);
 				}
 				return notification;
