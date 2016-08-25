@@ -44,6 +44,7 @@ namespace MvbaCore.ThirdParty.Messaging
 		public int SourceSystem { get; set; }
 		public int TaskType { get; set; }
 		public DateTime TimeStamp { get; set; }
+		public DateTime? RunAfter { get; set; }
 		public string TypeOfData { get; set; }
 	}
 
@@ -525,8 +526,10 @@ namespace MvbaCore.ThirdParty.Messaging
 
 				var stopwatch = new Stopwatch();
 				stopwatch.Start();
-
-				var messageWrapper = _messages.FirstOrDefault(x => !x.Processed);
+				var now = DateTime.Now;
+				var messageWrapper = _messages
+					.Where(x => x.Header.RunAfter == null || now > x.Header.RunAfter.Value)
+					.FirstOrDefault(x => !x.Processed);
 				if (messageWrapper != null)
 				{
 					do
