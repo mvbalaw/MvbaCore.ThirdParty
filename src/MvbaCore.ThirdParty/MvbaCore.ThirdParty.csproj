@@ -45,14 +45,6 @@
     <Compile Include="Json\JsonUtility.cs" />
     <Compile Include="Json\JsonWebServiceClient.cs" />
     <Compile Include="WebServiceClient.cs" />
-    <Compile Include="Lucene\IEntityIndexUpdater.cs" />
-    <Compile Include="Lucene\ILuceneFileSystem.cs" />
-    <Compile Include="Lucene\ILuceneIndexedField.cs" />
-    <Compile Include="Lucene\LuceneConstants.cs" />
-    <Compile Include="Lucene\LuceneIndexer.cs" />
-    <Compile Include="Lucene\LuceneSearcher.cs" />
-    <Compile Include="Lucene\LuceneSearchResult.cs" />
-    <Compile Include="Lucene\LuceneWriter.cs" />
     <Compile Include="Messaging\MessageWatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -67,10 +59,6 @@
     <Reference Include="JetBrains.Annotations, Version=10.1.5.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.Annotations.10.1.5\lib\net\JetBrains.Annotations.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="Lucene.Net, Version=3.0.3.0, Culture=neutral, PublicKeyToken=85089178b9ac3181, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Lucene.Net.3.0.3\lib\NET40\Lucene.Net.dll</HintPath>
     </Reference>
     <Reference Include="MvbaCore">
       <HintPath>..\..\lib\MvbaCore\MvbaCore.dll</HintPath>
