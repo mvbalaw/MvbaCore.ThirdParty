@@ -538,7 +538,9 @@ namespace MvbaCore.ThirdParty.Messaging
 
 						ProcessMessage(messageWrapper);
 
-						messageWrapper = _messages.FirstOrDefault(x => !x.Processed);
+						messageWrapper = _messages
+							.Where(x => x.Header.RunAfter == null || now > x.Header.RunAfter.Value)
+							.FirstOrDefault(x => !x.Processed);
 //// ReSharper disable ConditionIsAlwaysTrueOrFalse
 					} while (_running && messageWrapper != null && stopwatch.Elapsed.TotalSeconds < 10);
 //// ReSharper restore ConditionIsAlwaysTrueOrFalse
