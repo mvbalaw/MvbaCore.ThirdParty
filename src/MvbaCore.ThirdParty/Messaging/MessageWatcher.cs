@@ -36,8 +36,13 @@ namespace MvbaCore.ThirdParty.Messaging
 		void Quiesce();
 	}
 
+	public interface IHaveStringId
+	{
+		string Id { get; }
+	}
+
 	[UsedImplicitly]
-	public class MessageRequest
+	public class MessageRequest : IHaveStringId
 	{
 		public string CreatedBy { get; set; }
 		public int Priority { get; set; }
@@ -46,6 +51,8 @@ namespace MvbaCore.ThirdParty.Messaging
 		public DateTime TimeStamp { get; set; }
 		public DateTime? RunAfter { get; set; }
 		public string TypeOfData { get; set; }
+		public string Data { get; set; }
+		public string Id { get; set; }
 	}
 
 	public class MessageWrapper
@@ -56,7 +63,13 @@ namespace MvbaCore.ThirdParty.Messaging
 		public bool Processed { get; set; }
 	}
 
-	public class MessageWatcher
+	public interface IMessageWatcher
+	{
+		void Start();
+		void Stop();
+	}
+
+	public class MessageWatcher : IMessageWatcher
 	{
 		private const string ErrorReasonFileExtension = ".reason.txt";
 		private readonly string _archiveDirectory = "Archive";
