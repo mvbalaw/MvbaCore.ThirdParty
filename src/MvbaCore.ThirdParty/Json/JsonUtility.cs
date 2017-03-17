@@ -30,7 +30,7 @@ namespace MvbaCore.ThirdParty.Json
 			using (var reader = new StreamReader(filePath))
 			{
 				return serializer.Deserialize(reader, type);
-			}
+			} 
 		}
 
 		public static object DeserializeFromStream(Stream stream, Type type, bool useTypePropertyToMapConcreteObjects = false)
