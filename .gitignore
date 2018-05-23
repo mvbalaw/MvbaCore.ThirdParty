@@ -19,3 +19,5 @@ dist/
 dist.bat
 src/packages
 src/MvbaCore.ThirdParty.Tests/FluentAssert.*
+.vs/
+*.DotSettings

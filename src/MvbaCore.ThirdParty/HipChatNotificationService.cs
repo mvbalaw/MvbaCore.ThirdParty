@@ -45,14 +45,14 @@ namespace MvbaCore.ThirdParty
 				var notification  = new Notification<HipChatResult>();
 				foreach (var partialMessage in hipChatMessage.Message.InSetsOf(5000))
 				{
-					var message = HttpUtility.UrlEncode(new String(partialMessage.ToArray()));
+					var message = HttpUtility.UrlEncode(new string(partialMessage.ToArray()));
 					var content = "room_id=" + HttpUtility.UrlEncode(hipChatMessage.RoomId)
 						+ "&from=" + HttpUtility.UrlEncode(hipChatMessage.From)
 						+ "&message=" + message
 						+ "&color=" + hipChatMessage.Color.OrDefault().Key
 						+ "&message_format=" + hipChatMessage.MessageFormat.OrDefault().Key
 						+ "&notify=" + (hipChatMessage.Notify ? 1 : 0);
-					var result = _webServiceClient.Post(String.Format(ApiMessageRoomUrl, hipChatMessage.ApiKey), content, "application/x-www-form-urlencoded");
+					var result = _webServiceClient.Post(string.Format(ApiMessageRoomUrl, hipChatMessage.ApiKey), content, "application/x-www-form-urlencoded");
 					if (!result.IsValid)
 					{
 						notification.Add(result);
@@ -96,13 +96,13 @@ namespace MvbaCore.ThirdParty
 				var notification  = new Notification<HipChatResult>();
 				foreach (var partialMessage in hipChatMessage.Message.InSetsOf(5000))
 				{
-					var message = EscapeJsonSpecials(new String(partialMessage.ToArray()));
+					var message = EscapeJsonSpecials(new string(partialMessage.ToArray()));
 					var content = string.Format(@"{{
 ""message"": {0},
 ""message_format"": ""{1}"",
 ""notify"": ""{2}""
 }}", message, hipChatMessage.MessageFormat.OrDefault().Key, hipChatMessage.Notify.ToString().ToLower());
-					var result = _webServiceClient.Post(String.Format(ApiMessageUserUrl, hipChatMessage.To, hipChatMessage.ApiKey), content, "application/json");
+					var result = _webServiceClient.Post(string.Format(ApiMessageUserUrl, hipChatMessage.To, hipChatMessage.ApiKey), content, "application/json");
 					if (!result.IsValid)
 					{
 						notification.Add(result);
