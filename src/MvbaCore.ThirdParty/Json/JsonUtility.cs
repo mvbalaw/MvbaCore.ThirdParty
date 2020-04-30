@@ -65,7 +65,10 @@ namespace MvbaCore.ThirdParty.Json
 				                                                             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
 				                                                             Converters = new List<JsonConverter>
 				                                                                          {
-					                                                                          new IsoDateTimeConverter()
+					                                                                          new IsoDateTimeConverter
+					                                                                          {
+																								  DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ssK" // otherwise includes fractional seconds
+					                                                                          }
 				                                                                          }
 			                                                             });
 		}
